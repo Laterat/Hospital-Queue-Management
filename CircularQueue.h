@@ -2,8 +2,6 @@
 #define CIRCULARQUEUE_H
 
 #include "Patient.h"
-#include <iostream>
-using namespace std;
 
 class CircularQueue
 {
@@ -15,15 +13,16 @@ public:
     CircularQueue(int cap);
     ~CircularQueue();
 
-    bool isFull();
     bool isEmpty();
+    bool isFull();
     int count();
 
-    void enqueue(Patient p);          // Normal + emergency
-    void dequeue();                   // Doctor consults patient
-    void display();                   // Show queue
-    Patient *searchPatient(int id);   // Search patient by ID
-    int estimatedWaitingTime(int id); // Waiting time in minutes
+    void enqueue(Patient p);
+    void dequeue();
+    void display();
+
+    Patient *searchPatient(int id);
+    int estimatedWaitingTime(int id);
 };
 
 #endif

@@ -1,99 +1,137 @@
 #include <iostream>
-#include "Patient.h"
 #include "CircularQueue.h"
+#include "UserManager.h"
+#include "Auth.h"
 #include "Utils.h"
+#include <limits>
+
 using namespace std;
+
+int getQueueCapacity(int maxLimit) {
+    int cap;
+    cout << "Enter max queue capacity (1-" << maxLimit << "): ";
+    while (!(cin >> cap) || cap <= 0 || cap > maxLimit) {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Invalid input. Enter a number between 1 and " << maxLimit << ": ";
+    }
+    return cap;
+}
 
 int main()
 {
-    int capacity;
-    cout << "Enter maximum number of patients in queue: ";
-    cin >> capacity;
+    UserManager::init();
 
-    CircularQueue hospitalQueue(capacity);
+   const int MAX_HOSPITAL_CAPACITY = 500; // realistic max for demo
+    int cap = getQueueCapacity(MAX_HOSPITAL_CAPACITY);
 
-    int choice;
-    do
+    cout << "Queue will be created with capacity: " << cap << endl;
+
+    CircularQueue queue(cap);
+    User currentUser;
+
+    while (true)
     {
-        cout << "\n===== Hospital Queue Management (Staff) =====\n";
-        cout << "1. Register Patient (Receptionist)\n";
-        cout << "2. Consult Next Patient (Doctor)\n";
-        cout << "3. Display Waiting Patients (Staff)\n";
-        cout << "4. Search Patient by ID (Receptionist/Doctor)\n";
-        cout << "5. Check Queue Status (Admin)\n";
-        cout << "6. Estimated Waiting Time (Receptionist)\n";
-        cout << "7. Exit\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
-
-        switch (choice)
+        cout << "\n--- Hospital System Login ---\n";
+        if (!login(currentUser))
         {
-        case 1:
-        {
-            Patient p;
-            p.id = generatePatientID();
-            cin.ignore();
-            cout << "Enter Name: ";
-            getline(cin, p.name);
-            cout << "Enter Age: ";
-            cin >> p.age;
-            cin.ignore();
-            cout << "Enter Symptoms: ";
-            getline(cin, p.symptoms);
-            int pri;
-            cout << "Emergency? 1 = Yes, 0 = No: ";
-            cin >> pri;
-            p.priority = pri;
-            hospitalQueue.enqueue(p);
-            break;
+            cout << "Invalid credentials.\n";
+            continue;
         }
-        case 2:
-            hospitalQueue.dequeue();
-            break;
-        case 3:
-            hospitalQueue.display();
-            break;
-        case 4:
+
+        if (currentUser.role == ADMIN)
         {
-            int id;
-            cout << "Enter Patient ID to search: ";
-            cin >> id;
-            Patient *p = hospitalQueue.searchPatient(id);
-            if (p)
+            int c;
+            do
             {
-                cout << "Found Patient - ID: " << p->id << ", Name: " << p->name
-                     << ", Age: " << p->age
-                     << ", Symptoms: " << p->symptoms
-                     << ", Priority: " << (p->priority == 1 ? "Emergency" : "Normal") << "\n";
-            }
-            else
-                cout << "Patient not found.\n";
-            break;
-        }
-        case 5:
-            cout << "Patients in queue: " << hospitalQueue.count() << "\n";
-            cout << (hospitalQueue.isEmpty() ? "Queue is empty\n" : "Queue has patients\n");
-            cout << (hospitalQueue.isFull() ? "Queue is full\n" : "Queue is not full\n");
-            break;
-        case 6:
-        {
-            int id;
-            cout << "Enter Patient ID for estimated waiting time: ";
-            cin >> id;
-            int time = hospitalQueue.estimatedWaitingTime(id);
-            if (time >= 0)
-                cout << "Estimated waiting time: " << time << " minutes.\n";
-            else
-                cout << "Patient not found.\n";
-            break;
-        }
-        case 7:
-            cout << "Exiting system...\n";
-            break;
-        default:
-            cout << "Invalid choice! Try again.\n";
-        }
-    } while (choice != 7);
+                cout << "\n[ADMIN MENU]\n";
+                cout << "1. Add Staff User\n";
+                cout << "2. Remove Staff User\n";
+                cout << "3. List Users\n";
+                cout << "4. Logout\n";
+                cin >> c;
 
-    return 0;
+                if (c == 1)
+                    UserManager::addUser();
+                else if (c == 2)
+                    UserManager::removeUser();
+                else if (c == 3)
+                    UserManager::listUsers();
+            } while (c != 4);
+        }
+
+        else if (currentUser.role == RECEPTIONIST)
+        {
+            int c;
+            do
+            {
+                cout << "\n[RECEPTIONIST MENU]\n";
+                cout << "1. Register Patient\n";
+                cout << "2. Search Patient\n";
+                cout << "3. Estimated Waiting Time\n";
+                cout << "4. Display Queue\n";
+                cout << "5. Logout\n";
+                cin >> c;
+
+                if (c == 1)
+                {
+                    Patient p;
+                    p.id = generatePatientID();
+                    cin.ignore();
+                    cout << "Name: ";
+                    getline(cin, p.name);
+                    cout << "Age: ";
+                    cin >> p.age;
+                    cin.ignore();
+                    cout << "Symptoms: ";
+                    getline(cin, p.symptoms);
+                    cout << "Emergency (1=Yes,0=No): ";
+                    cin >> p.priority;
+                    queue.enqueue(p);
+                }
+                else if (c == 2)
+                {
+                    int id;
+                    cout << "Enter patient ID: ";
+                    cin >> id;
+                    Patient *p = queue.searchPatient(id);
+                    if (p)
+                        cout << "Found: " << p->name << "\n";
+                    else
+                        cout << "Patient not found.\n";
+                }
+                else if (c == 3)
+                {
+                    int id;
+                    cout << "Patient ID: ";
+                    cin >> id;
+                    int t = queue.estimatedWaitingTime(id);
+                    if (t >= 0)
+                        cout << "Estimated wait: " << t << " minutes\n";
+                    else
+                        cout << "Patient not found.\n";
+                }
+                else if (c == 4)
+                    queue.display();
+            } while (c != 5);
+        }
+
+        else if (currentUser.role == DOCTOR)
+        {
+            int c;
+            do
+            {
+                cout << "\n[DOCTOR MENU]\n";
+                cout << "1. Consult Next Patient\n";
+                cout << "2. Display Queue\n";
+                cout << "3. Logout\n";
+                cin >> c;
+
+                if (c == 1)
+                    queue.dequeue();
+                else if (c == 2)
+                    queue.display();
+            } while (c != 3);
+        }
+    }
 }

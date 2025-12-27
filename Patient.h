@@ -6,11 +6,11 @@ using namespace std;
 
 struct Patient
 {
-    int id;          // Unique patient ID
-    string name;     // Patient name
-    int age;         // Age
-    string symptoms; // Reason for visit
-    int priority;    // 1 = Emergency, 0 = Normal
+    int id;
+    string name;
+    int age;
+    string symptoms;
+    int priority; // 1 = Emergency, 0 = Normal
 };
 
 #endif
