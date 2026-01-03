@@ -15,7 +15,7 @@ public:
 
     bool isEmpty();
     bool isFull();
-    int count();
+    int getSize() const;
 
     void enqueue(Patient p);
     void dequeue();
@@ -23,6 +23,9 @@ public:
 
     Patient *searchPatient(int id);
     int estimatedWaitingTime(int id);
+
+    Patient* peek();
+
 };
 
 #endif

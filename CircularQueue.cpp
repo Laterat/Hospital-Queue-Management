@@ -14,6 +14,7 @@ CircularQueue::CircularQueue(int cap)
 CircularQueue::~CircularQueue()
 {
     delete[] queue;
+    queue = nullptr;
 }
 
 bool CircularQueue::isEmpty()
@@ -26,11 +27,10 @@ bool CircularQueue::isFull()
     return size == capacity;
 }
 
-int CircularQueue::count()
+int CircularQueue::getSize() const
 {
     return size;
 }
-
 void CircularQueue::enqueue(Patient p)
 {
     if (isFull())
@@ -39,28 +39,33 @@ void CircularQueue::enqueue(Patient p)
         return;
     }
 
-    if (p.priority == 1)
-    { // Emergency
-        int i = size;
-        while (i > 0)
+    int insertPos = size;  // logical position
+
+    if (p.priority == EMERGENCY)
+    {
+        for (int i = 0; i < size; i++)
         {
             int idx = (front + i) % capacity;
-            int prev = (front + i - 1) % capacity;
-            if (queue[prev].priority == 1)
+            if (queue[idx].priority == NORMAL)
+            {
+                insertPos = i;
                 break;
-            queue[idx] = queue[prev];
-            i--;
+            }
         }
-        queue[(front + i) % capacity] = p;
-        rear = (rear + 1) % capacity;
-    }
-    else
-    {
-        rear = (rear + 1) % capacity;
-        queue[rear] = p;
     }
 
+    // shift logically (SAFE)
+    for (int i = size; i > insertPos; i--)
+    {
+        int curr = (front + i) % capacity;
+        int prev = (front + i - 1) % capacity;
+        queue[curr] = queue[prev];
+    }
+
+    queue[(front + insertPos) % capacity] = p;
+    rear = (rear + 1) % capacity;
     size++;
+
     cout << "Patient registered successfully.\n";
 }
 
@@ -114,7 +119,7 @@ Patient *CircularQueue::searchPatient(int id)
 
 int CircularQueue::estimatedWaitingTime(int id)
 {
-    int avgTime = 15; // minutes
+ 
     int time = 0;
 
     for (int i = 0; i < size; i++)
@@ -122,7 +127,15 @@ int CircularQueue::estimatedWaitingTime(int id)
         int idx = (front + i) % capacity;
         if (queue[idx].id == id)
             return time;
+             int avgTime = (queue[idx].priority == EMERGENCY) ? 20 : 10; // minutes
         time += avgTime;
     }
     return -1;
+}
+
+Patient* CircularQueue::peek()
+{
+    if (isEmpty())
+        return nullptr;
+    return &queue[front];
 }
