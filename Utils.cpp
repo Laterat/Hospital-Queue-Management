@@ -34,7 +34,7 @@ string generateUsername(const string& fullName)
 }
 
 
-string generatePasswordStr(int length = 8)
+string generatePassword(int length)
 {
     const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                          "abcdefghijklmnopqrstuvwxyz"
@@ -69,14 +69,19 @@ bool isValidEthiopianPhone(const string& phone)
     return true;
 }
 
-string getValidatedInput(const string& prompt, bool (*validator)(const string&) = nullptr, const string& errorMsg = "")
-{
+string getValidatedInput(
+    const string& prompt,
+    bool (*validator)(const string&),
+    const string& errorMsg
+){
     string input;
     do {
         cout << prompt;
         getline(cin, input);
+
         if (!validator || validator(input))
             break;
+
         cout << errorMsg << endl;
     } while (true);
     return input;
