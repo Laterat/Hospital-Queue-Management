@@ -12,24 +12,35 @@ using namespace std;
     return id++;
 }
 
-string generateUsername(const string& fullName)
+string generateUsername(const string& fullName, const string& phone)
 {
-    string username;
+    // 1️⃣ Split first and father name
+    string firstName;
+    char fatherInitial = 'x'; // fallback if no second name
+
     size_t spacePos = fullName.find(' ');
-    if(spacePos != string::npos)
-        username = string(1, tolower(fullName[0])) + fullName.substr(spacePos + 1);
+    if (spacePos != string::npos)
+    {
+        firstName = fullName.substr(0, spacePos);
+        fatherInitial = tolower(fullName[spacePos + 1]);
+    }
     else
-        username = fullName;
+    {
+        firstName = fullName; // only one name
+    }
 
-    // Remove spaces
-    username.erase(remove(username.begin(), username.end(), ' '), username.end());
+    // 2️⃣ Lowercase first name
+    transform(firstName.begin(), firstName.end(), firstName.begin(), ::tolower);
 
-    // Add 3 random digits
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_int_distribution<> dis(100, 999);
-    username += to_string(dis(gen));
+    // 3️⃣ Take last 2 digits of phone
+    string phoneSuffix;
+    if (phone.length() >= 2)
+        phoneSuffix = phone.substr(phone.length() - 2);
+    else
+        phoneSuffix = phone; // fallback
 
+    // 4️⃣ Combine
+    string username = firstName + fatherInitial + phoneSuffix;
     return username;
 }
 

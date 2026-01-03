@@ -34,22 +34,33 @@ bool confirmAction(const std::string& msg)
     }
 }
 
-string getUpdatedField(const string& fieldName, const string& currentValue, bool (*validator)(const string&) = nullptr)
+string getUpdatedField(
+    const string& fieldName,
+    const string& currentValue,
+    bool (*validator)(const string&) = nullptr
+)
 {
-    cout << fieldName << " (" << currentValue << "): ";
-    string input;
-    getline(cin, input);
-
-    if (input.empty())
-        return currentValue; // keep old value
-
-    if (validator && !validator(input))
+    while (true)
     {
-        cout << "Invalid input. Skipped.\n";
-        return currentValue;
-    }
+        cout << fieldName << " [" << currentValue << "] (Press ENTER to skip): ";
+        string input;
+        getline(cin, input);
 
-    return input;
+        // User pressed ENTER → keep old value
+        if (input.empty())
+            return currentValue;
+
+        // No validator → accept input
+        if (!validator)
+            return input;
+
+        // Validator exists → check
+        if (validator(input))
+            return input;
+
+        // Invalid input → allow retry
+        cout << "Invalid input. Try again or press ENTER to skip.\n";
+    }
 }
 
 
@@ -91,6 +102,9 @@ void UserManager::init()
     admin.username = "admin";
     admin.password = "admin123";
     admin.role = ADMIN;
+    admin.age = 0; // or a meaningful value
+    admin.registrationDate = time(nullptr);
+
     head = new UserNode(admin);
     cout << "Initialized with default admin account.\n";
 }
@@ -127,7 +141,7 @@ void UserManager::addUser(const User& currentUser)
     u.phoneNumber = getValidatedInput("Enter phone number (09XXXXXXXX): ", isValidEthiopianPhone, "Invalid phone format.");
 
     u.registrationDate = time(nullptr);
-    u.username = generateUsername(u.fullName);
+    u.username = generateUsername(u.fullName, u.phoneNumber);
     u.password = generatePassword();
 
     cout << "Select role (1-Receptionist, 2-Doctor): ";
@@ -140,6 +154,8 @@ void UserManager::addUser(const User& currentUser)
     appendUser(u);
 
     cout << "User '" << u.fullName << "' added successfully!\n";
+    cout << "Username: " << u.username << "\n";
+    cout << "Password: " << u.password << "\n";
 }
 
 void UserManager::removeUser(const User& currentUser)
@@ -244,6 +260,7 @@ void UserManager::listUsers(const User& currentUser)
 void UserManager::updateOwnProfile(User &loggedUser)
 {
     UserNode* current = head;
+
     while (current)
     {
         if (current->data.username == loggedUser.username)
@@ -251,33 +268,59 @@ void UserManager::updateOwnProfile(User &loggedUser)
             User &u = current->data;
             cin.ignore(); // clear leftover newline
 
+            cout << "\n--- Update Your Profile ---\n";
+            cout << "Press ENTER to skip a field.\n\n";
+
+            // Update Full Name
             u.fullName = getUpdatedField("Full Name", u.fullName, isValidName);
 
+            // Update Age
             string ageStr = getUpdatedField("Age", to_string(u.age));
-            try {
-                int age = stoi(ageStr);
-                if (age > 0 && age < 120)
-                    u.age = age;
-                else
-                    cout << "Invalid age. Skipped.\n";
-            } catch (...) {
-                cout << "Invalid age input. Skipped.\n";
+            if (!ageStr.empty())
+            {
+                try {
+                    int age = stoi(ageStr);
+                    if (age > 0 && age < 120)
+                        u.age = age;
+                    else
+                        cout << "Invalid age. Skipped.\n";
+                } catch (...) {
+                    cout << "Invalid age input. Skipped.\n";
+                }
             }
 
+            // Update Location
             u.location = getUpdatedField("Location", u.location);
+
+            // Update Phone Number
             u.phoneNumber = getUpdatedField("Phone Number", u.phoneNumber, isValidEthiopianPhone);
 
-            cout << "Do you want to regenerate password? (y/n): ";
-            char choice; cin >> choice;
-            if (choice == 'y' || choice == 'Y') {
+            // Update Password
+            cout << "\nDo you want to change your password?\n";
+            cout << "1. Regenerate automatically\n2. Create your own\n0. Skip\nChoice: ";
+            int choice; 
+            cin >> choice;
+            cin.ignore(); // clear newline
+            if (choice == 1)
+            {
                 u.password = generatePassword();
                 cout << "New password: " << u.password << "\n";
             }
+            else if (choice == 2)
+            {
+                string newPass = getValidatedInput(
+                    "Enter new password: ",
+                    [](const string& s){ return s.length() >= 6; },
+                    "Password must be at least 6 characters."
+                );
+                u.password = newPass;
+            }
 
             loggedUser = u;
-            cout << "Profile updated successfully!\n";
+            cout << "\nProfile updated successfully!\n";
             return;
         }
+
         current = current->next;
     }
 
@@ -301,7 +344,7 @@ void UserManager::resetUserCredentials()
                 return;
             }
 
-            u.username = generateUsername(u.fullName);
+            u.username = generateUsername(u.fullName, u.phoneNumber);
             u.password = generatePassword();
 
             cout << "Credentials reset successfully.\n";
