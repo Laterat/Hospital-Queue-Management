@@ -1,0 +1,10 @@
+
+Title: Hospital Queue Management System using circular Queues
+
+Section 1
+
+Group Members                ID
+1	Kaleab Tesfaye	     UGR/5646/16
+2	Abraham G/hiwot      UGR/2135/16
+3	Ataklti ybrah	     UGR/9593/16
+4	Latera Tilahun	     UGR/3357/16

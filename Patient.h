@@ -7,17 +7,19 @@ using namespace std;
 enum Priority { NORMAL = 0, EMERGENCY = 1 };
 
 
-   struct Patient
+struct Patient
 {
     int id;
     string name;
     int age;
-    string symptoms;
-    Priority priority;
-
-    time_t arrivalTime;
     string phone;
     string address;
+    time_t arrivalTime;
+
+    string symptoms;
+    Priority priority;
+   
+    
 
     bool isEmergency;
     bool isConsulted;

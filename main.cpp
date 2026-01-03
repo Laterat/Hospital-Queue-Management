@@ -102,22 +102,22 @@ int main()
                 {
                     Patient p;
                     p.id = generatePatientID();
-                    cin.ignore();
-                    cout << "Name: ";
-                    getline(cin, p.name);
+                    cin.ignore(); // clear newline
 
-                    cout << "Age: ";
-                    cin >> p.age;
-                    cin.ignore();
+                    p.name = getValidatedInput("Enter full name: ", isValidName, "Letters and spaces only.");
+                    p.age = getValidatedInt("Enter age: ", 0, 120);
+                    p.address = getValidatedInput("Enter location: ", [](const string& s){ return !s.empty(); }, "Cannot be empty.");
+                    p.phone = getValidatedInput("Enter phone number (09XXXXXXXX): ", isValidEthiopianPhone, "Invalid phone format.");
 
-                    cout << "Symptoms: ";
-                    getline(cin, p.symptoms);
+                   p.arrivalTime = time(nullptr);
 
-                    cout << "Emergency or Normal : ";
-                    int pr;
-                    cin >> pr;
-                    p.priority = (pr == 1) ? EMERGENCY : NORMAL;
+                   // Optional symptoms for realism
+                   p.symptoms = getValidatedInput("Enter symptoms (optional, leave blank if none): ",
+                                           [](const string& s){ return true; });
 
+            
+                 int pr = getValidatedInt("Emergency or Normal (1=Emergency, 0=Normal): ", 0, 1);
+                 p.priority = (pr == 1) ? EMERGENCY : NORMAL;
                     queue.enqueue(p);
                 }
                 else if (c == 2)
