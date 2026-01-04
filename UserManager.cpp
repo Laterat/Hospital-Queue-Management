@@ -257,9 +257,17 @@ void UserManager::listUsers(const User& currentUser)
     }
 }
 
+// Updates a field if the new value is different, sets updated flag
+void updateField(string& field, const string& newValue, bool& updatedFlag) {
+    if (newValue != field) {
+        field = newValue;
+        updatedFlag = true;
+    }
+}
 void UserManager::updateOwnProfile(User &loggedUser)
 {
     UserNode* current = head;
+    bool updated = false; // Track if any field changed
 
     while (current)
     {
@@ -271,53 +279,63 @@ void UserManager::updateOwnProfile(User &loggedUser)
             cout << "\n--- Update Your Profile ---\n";
             cout << "Press ENTER to skip a field.\n\n";
 
-            // Update Full Name
-            u.fullName = getUpdatedField("Full Name", u.fullName, isValidName);
+            // Full Name
+            updateField(u.fullName, getUpdatedField("Full Name", u.fullName, isValidName), updated);
 
-            // Update Age
-            string ageStr = getUpdatedField("Age", to_string(u.age));
-            if (!ageStr.empty())
-            {
+            // Age
+            string ageInput = getUpdatedField("Age", to_string(u.age));
+            if (!ageInput.empty()) {
                 try {
-                    int age = stoi(ageStr);
-                    if (age > 0 && age < 120)
-                        u.age = age;
-                    else
+                    int newAge = stoi(ageInput);
+                    if (newAge > 0 && newAge < 120) {
+                        if (newAge != u.age) {
+                            u.age = newAge;
+                            updated = true;
+                        }
+                    } else {
                         cout << "Invalid age. Skipped.\n";
+                    }
                 } catch (...) {
                     cout << "Invalid age input. Skipped.\n";
                 }
             }
 
-            // Update Location
-            u.location = getUpdatedField("Location", u.location);
+            // Location
+            updateField(u.location, getUpdatedField("Location", u.location), updated);
 
-            // Update Phone Number
-            u.phoneNumber = getUpdatedField("Phone Number", u.phoneNumber, isValidEthiopianPhone);
+            // Phone Number
+            updateField(u.phoneNumber, getUpdatedField("Phone Number", u.phoneNumber, isValidEthiopianPhone), updated);
 
-            // Update Password
+            // Password
             cout << "\nDo you want to change your password?\n";
             cout << "1. Regenerate automatically\n2. Create your own\n0. Skip\nChoice: ";
-            int choice; 
+            int choice;
             cin >> choice;
             cin.ignore(); // clear newline
-            if (choice == 1)
-            {
+
+            if (choice == 1) {
                 u.password = generatePassword();
                 cout << "New password: " << u.password << "\n";
-            }
-            else if (choice == 2)
-            {
+                updated = true;
+            } else if (choice == 2) {
                 string newPass = getValidatedInput(
                     "Enter new password: ",
                     [](const string& s){ return s.length() >= 6; },
                     "Password must be at least 6 characters."
                 );
-                u.password = newPass;
+                if (newPass != u.password) {
+                    u.password = newPass;
+                    updated = true;
+                }
             }
 
-            loggedUser = u;
-            cout << "\nProfile updated successfully!\n";
+            loggedUser = u; // update the logged-in user
+
+            if (updated)
+                cout << "\nProfile updated successfully!\n";
+            else
+                cout << "\nNo changes were made to your profile.\n";
+
             return;
         }
 
@@ -326,6 +344,77 @@ void UserManager::updateOwnProfile(User &loggedUser)
 
     cout << "Error: Your profile was not found.\n";
 }
+
+// void UserManager::updateOwnProfile(User &loggedUser)
+// {
+//     UserNode* current = head;
+//     bool updated = false; // Track if any field is updated
+
+//     while (current)
+//     {
+//         if (current->data.username == loggedUser.username)
+//         {
+//             User &u = current->data;
+//             cin.ignore(); // clear leftover newline
+
+//             cout << "\n--- Update Your Profile ---\n";
+//             cout << "Press ENTER to skip a field.\n\n";
+
+//             // Update Full Name
+//             u.fullName = getUpdatedField("Full Name", u.fullName, isValidName);
+
+//             // Update Agewh
+//             string ageStr = getUpdatedField("Age", to_string(u.age));
+//             if (!ageStr.empty())
+//             {
+//                 try {
+//                     int age = stoi(ageStr);
+//                     if (age > 18 && age < 120)
+//                         u.age = age;
+//                     else
+//                         cout << "Invalid age. Skipped.\n";
+//                 } catch (...) {
+//                     cout << "Invalid age input. Skipped.\n";
+//                 }
+//             }
+
+//             // Update Location
+//             u.location = getUpdatedField("Location", u.location);
+
+//             // Update Phone Number
+//             u.phoneNumber = getUpdatedField("Phone Number", u.phoneNumber, isValidEthiopianPhone);
+
+//             // Update Password
+//             cout << "\nDo you want to change your password?\n";
+//             cout << "1. Regenerate automatically\n2. Create your own\n0. Skip\nChoice: ";
+//             int choice; 
+//             cin >> choice;
+//             cin.ignore(); // clear newline
+//             if (choice == 1)
+//             {
+//                 u.password = generatePassword();
+//                 cout << "New password: " << u.password << "\n";
+//             }
+//             else if (choice == 2)
+//             {
+//                 string newPass = getValidatedInput(
+//                     "Enter new password: ",
+//                     [](const string& s){ return s.length() >= 6; },
+//                     "Password must be at least 6 characters."
+//                 );
+//                 u.password = newPass;
+//             }
+
+//             loggedUser = u;
+//             cout << "\nProfile updated successfully!\n";
+//             return;
+//         }
+
+//         current = current->next;
+//     }
+
+//     cout << "Error: Your profile was not found.\n";
+// }
 
 void UserManager::resetUserCredentials()
 {

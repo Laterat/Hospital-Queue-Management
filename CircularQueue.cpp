@@ -67,6 +67,8 @@ void CircularQueue::enqueue(Patient p)
     size++;
 
     cout << "Patient registered successfully.\n";
+    cout << "ID: " << queue[(front + insertPos) % capacity].id
+         << ", Name: " << queue[(front + insertPos) % capacity].name << "\n";
 }
 
 void CircularQueue::dequeue()

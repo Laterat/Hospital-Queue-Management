@@ -96,6 +96,7 @@ int main()
                 cout << "4. Display Queue\n";
                 cout << "5. Update My Profile\n"; // new
                 cout << "6. Logout\n";
+                cout << "Choice: ";
                 cin >> c;
 
                 if (c == 1)
@@ -123,7 +124,7 @@ int main()
                 else if (c == 2)
                 {
                     int id;
-                    cout << "Enter patient ID: ";
+                    cout << "Enter patient ID or number: ";
                     cin >> id;
                     Patient *p = queue.searchPatient(id);
                     if (p)
@@ -164,6 +165,7 @@ int main()
                 cout << "3. Display Queue\n";
                 cout << "4. Update My Profile\n"; // new
                 cout << "5. Logout\n";
+                 cout << "Choice: ";
                 cin >> c;
 
                 switch (c)
